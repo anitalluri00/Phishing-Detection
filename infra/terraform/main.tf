@@ -56,7 +56,7 @@ resource "terraform_data" "kubectl_apply" {
     tostring(var.frontend_replicas),
     var.namespace,
     pathexpand(var.kubeconfig_path),
-    coalesce(var.kubeconfig_context, ""),
+    var.kubeconfig_context != null ? var.kubeconfig_context : "",
   ]
 
   provisioner "local-exec" {
