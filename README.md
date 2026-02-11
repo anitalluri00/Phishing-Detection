@@ -1,83 +1,166 @@
-# Phishing URL Detection 
-![image](https://user-images.githubusercontent.com/79131292/144742825-23367f0f-9e67-4c99-ba1f-b86a187675c9.png)
-![image](https://user-images.githubusercontent.com/79131292/144742785-d183f50a-52d6-4296-a43a-90a1ee3502d8.png)
+# PhishDetect (URL + Infra + CI/CD)
 
-## Table of Content
-  * [Introduction](#introduction)
-  * [Installation](#installation)
-  * [Directory Tree](#directory-tree)
-  * [Result](#result)
-  * [Conclusion](#conclusion)
+This repository contains:
+- A hardened Flask backend API for phishing URL prediction.
+- A separate frontend (Nginx static app) that calls backend `/api/predict`.
+- Model training scripts.
+- Kaggle dataset download script using `kagglehub`.
+- Docker, Kubernetes, Terraform, and Jenkins CI/CD setup.
 
+## Folder Structure
 
-## Introduction
+```text
+.
+├── backend
+│   ├── app.py
+│   ├── feature_extraction.py
+│   ├── train_model.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── model/
+│   └── templates/
+├── frontend
+│   ├── src/
+│   ├── nginx/default.conf.template
+│   └── Dockerfile
+├── infra
+│   ├── k8s/
+│   └── terraform/
+├── tools
+│   └── download_kaggle_datasets.py
+├── data
+│   └── urldata.csv
+└── Jenkinsfile
+```
 
-The Internet has become an indispensable part of our life, However, It also has provided opportunities to anonymously perform malicious activities like Phishing. Phishers try to deceive their victims by social engineering or creating mockup websites to steal information such as account ID, username, password from individuals and organizations. Although many methods have been proposed to detect phishing websites, Phishers have evolved their methods to escape from these detection methods. One of the most successful methods for detecting these malicious activities is Machine Learning. This is because most Phishing attacks have some common characteristics which can be identified by machine learning methods. To see project click [here]("/").
+## 1) Python Setup
 
-
-## Installation
-The Code is written in Python 3.6.10. If you don't have Python installed you can find it [here](https://www.python.org/downloads/). If you are using a lower version of Python you can upgrade using the pip package, ensuring you have the latest version of pip. To install the required packages and libraries, run this command in the project directory after [cloning](https://www.howtogeek.com/451360/how-to-clone-a-github-repository/) the repository:
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Directory Tree 
-```
-├── pickle
-│   ├── model.pkl
-├── static
-│   ├── styles.css
-├── templates
-│   ├── index.html
-├── Phishing URL Detection.ipynb
-├── Procfile
-├── README.md
-├── app.py
-├── feature.py
-├── phishing.csv
-├── requirements.txt
+## 2) Kaggle Dataset Download (as requested)
 
+The downloader script includes all dataset IDs you listed.
 
+Do not hardcode tokens in source files. Export it only in your shell/session:
+
+```bash
+export KAGGLE_API_TOKEN="<your-kaggle-token>"
+python3 tools/download_kaggle_datasets.py
 ```
 
-## Technologies Used
+Downloaded path mappings are saved to:
+- `data/kaggle/download_map.json`
 
-![](https://forthebadge.com/images/badges/made-with-python.svg)
+## 3) Train Model Internally
 
-[<img target="_blank" src="https://upload.wikimedia.org/wikipedia/commons/3/31/NumPy_logo_2020.svg" width=200>](https://numpy.org/doc/) [<img target="_blank" src="https://upload.wikimedia.org/wikipedia/commons/e/ed/Pandas_logo.svg" width=200>](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
-[<img target="_blank" src="https://upload.wikimedia.org/wikipedia/commons/8/84/Matplotlib_icon.svg" width=100>](https://matplotlib.org/)
-[<img target="_blank" src="https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png" width=200>](https://scikit-learn.org/stable/) 
-[<img target="_blank" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScq-xocLctL07Jy0tpR_p9w0Q42_rK1aAkNfW6sm3ucjFKWML39aaJPgdhadyCnEiK7vw&usqp=CAU" width=200>](https://flask.palletsprojects.com/en/2.0.x/) 
+Train from engineered dataset:
 
-## Result
+```bash
+python3 backend/train_model.py \
+  --input-csv data/urldata.csv \
+  --output-model backend/model/model.pkl \
+  --output-metrics backend/model/metrics.json
+```
 
-Accuracy of various model used for URL detection
-<br>
+## 4) Run Backend Locally
 
-<br>
+```bash
+python3 backend/app.py
+```
 
-||ML Model|	Accuracy|  	f1_score|	Recall|	Precision|
-|---|---|---|---|---|---|
-0|	Gradient Boosting Classifier|	0.974|	0.977|	0.994|	0.986|
-1|	CatBoost Classifier|	        0.972|	0.975|	0.994|	0.989|
-2|	XGBoost Classifier| 	        0.969|	0.973|	0.993|	0.984|
-3|	Multi-layer Perceptron|	        0.969|	0.973|	0.995|	0.981|
-4|	Random Forest|	                0.967|	0.971|	0.993|	0.990|
-5|	Support Vector Machine|	        0.964|	0.968|	0.980|	0.965|
-6|	Decision Tree|      	        0.960|	0.964|	0.991|	0.993|
-7|	K-Nearest Neighbors|        	0.956|	0.961|	0.991|	0.989|
-8|	Logistic Regression|        	0.934|	0.941|	0.943|	0.927|
-9|	Naive Bayes Classifier|     	0.605|	0.454|	0.292|	0.997|
+Endpoints:
+- `GET /health`
+- `POST /api/predict` with JSON body `{"url":"https://example.com"}`
 
-Feature importance for Phishing URL Detection 
-<br><br>
-![image](https://user-images.githubusercontent.com/79131292/144603941-19044aae-7d7b-4e9a-88a8-6adfd8626f77.png)
+## 5) Docker
 
+Build:
 
+```bash
+docker build -f backend/Dockerfile -t phishing-backend:latest backend
+docker build -f frontend/Dockerfile -t phishing-frontend:latest frontend
+```
 
+Run:
 
-## Conclusion
-1. The final take away form this project is to explore various machine learning models, perform Exploratory Data Analysis on phishing dataset and understanding their features. 
-2. Creating this notebook helped me to learn a lot about the features affecting the models to detect whether URL is safe or not, also I came to know how to tuned model and how they affect the model performance.
-3. The final conclusion on the Phishing dataset is that the some feature like "HTTTPS", "AnchorURL", "WebsiteTraffic" have more importance to classify URL is phishing URL or not. 
-4. Gradient Boosting Classifier currectly classify URL upto 97.4% respective classes and hence reduces the chance of malicious attachments.
+```bash
+docker network create phishing-net
+docker run -d --name backend --network phishing-net -p 5000:5000 phishing-backend:latest
+docker run -d --name frontend --network phishing-net -e BACKEND_UPSTREAM=http://backend:5000 -p 8080:8080 phishing-frontend:latest
+```
+
+## 6) Kubernetes
+
+```bash
+kubectl apply -f infra/k8s/namespace.yaml
+kubectl apply -f infra/k8s/backend.yaml
+kubectl apply -f infra/k8s/frontend.yaml
+```
+
+## 7) Terraform
+
+```bash
+cd infra/terraform
+terraform init
+terraform apply
+```
+
+### Automatic `kubectl apply` on `terraform apply`
+
+Terraform is configured to automatically run:
+
+```bash
+kubectl apply -f infra/k8s/namespace.yaml
+kubectl apply -f infra/k8s/backend.yaml
+kubectl apply -f infra/k8s/frontend.yaml
+```
+
+Controls:
+
+```bash
+# default: enabled
+terraform apply
+
+# disable auto kubectl apply
+terraform apply -var="run_kubectl_apply=false"
+
+# custom k8s manifest directory
+terraform apply -var="k8s_manifest_dir=/absolute/path/to/k8s"
+```
+
+## 8) Jenkins CI/CD
+
+`Jenkinsfile` is included at repo root.
+
+Main stages:
+- Checkout
+- Backend syntax checks
+- Install Python dependencies in `.venv`
+- Optional dependency vulnerability scan (`pip-audit`)
+- Optional Kaggle download
+- Optional internal model training
+- Docker image build
+- Optional image push
+- Optional Kubernetes deploy
+
+Required Jenkins credentials:
+- Docker registry creds (username/password): default id `docker-registry-creds`
+- Kubeconfig file credential: default id `kubeconfig`
+- Kaggle token secret text: default id `kaggle-api-token`
+
+## 9) Security and Bug Fixes Included
+
+- Request payload size limit.
+- URL validation and SSRF-style local/private host blocking.
+- Deprecated web traffic lookup is disabled by default to avoid false-positive bias.
+  If you need it, set `ENABLE_WEB_TRAFFIC_LOOKUP=true`.
+- URL fetch feature extraction now follows redirects manually and blocks private/local
+  redirect targets to reduce SSRF risk.
+- Non-root backend container runtime.
+- Non-root frontend container runtime.
+- K8s security context hardening (`runAsNonRoot`, dropped capabilities, no privilege escalation).
+- Removed debug-mode style behavior in production paths.

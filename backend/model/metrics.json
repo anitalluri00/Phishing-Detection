@@ -1,0 +1,49 @@
+{
+  "accuracy": 0.855072463768116,
+  "rows": 10001,
+  "features": [
+    "Have_IP",
+    "Have_At",
+    "URL_Length",
+    "URL_Depth",
+    "Redirection",
+    "https_Domain",
+    "TinyURL",
+    "Prefix/Suffix",
+    "DNS_Record",
+    "Web_Traffic",
+    "Domain_Age",
+    "Domain_End",
+    "iFrame",
+    "Mouse_Over",
+    "Right_Click",
+    "Web_Forwards"
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 0.8035866780529461,
+      "recall": 0.9400599400599401,
+      "f1-score": 0.8664825046040515,
+      "support": 1001.0
+    },
+    "1": {
+      "precision": 0.927710843373494,
+      "recall": 0.77,
+      "f1-score": 0.8415300546448088,
+      "support": 1000.0
+    },
+    "accuracy": 0.855072463768116,
+    "macro avg": {
+      "precision": 0.8656487607132201,
+      "recall": 0.85502997002997,
+      "f1-score": 0.8540062796244301,
+      "support": 2001.0
+    },
+    "weighted avg": {
+      "precision": 0.8656177451796567,
+      "recall": 0.855072463768116,
+      "f1-score": 0.8540125146194225,
+      "support": 2001.0
+    }
+  }
+}

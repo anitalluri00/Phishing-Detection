@@ -1,0 +1,15 @@
+.git
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+Lib/
+Scripts/
+Testing-Machine-Learning-Models/
+OLD/
+Basic Documentation/
+Data-Files/
+legacy/
+notebooks/
+SWEETVIZ_REPORT.html

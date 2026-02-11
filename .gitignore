@@ -1,0 +1,22 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+
+.idea/
+.vscode/
+.venv/
+venv/
+
+# Legacy local env/data folders in this workspace
+Lib/
+Scripts/
+OLD/
+Data-Files/
+Basic Documentation/
+Testing-Machine-Learning-Models/
+SWEETVIZ_REPORT.html
